@@ -38,7 +38,7 @@ export class AuthService {
 
   refreshToken(): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.apiUrl}/refresh`, localStorage.getItem('accessToken'))
+      .post<AuthResponse>(`${this.apiUrl}/refresh`, { refreshToken: localStorage.getItem('refreshToken') })
       .pipe(
         tap((response) => {
           localStorage.setItem('accessToken', response.accessToken);
