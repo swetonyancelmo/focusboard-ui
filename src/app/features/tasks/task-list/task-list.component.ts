@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { TaskService } from '../../../core/services/task.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-task-list',
+  standalone: true,
   templateUrl: './task-list.component.html',
   styleUrl: './task-list.component.scss',
   imports: [
@@ -28,28 +29,28 @@ export class TaskListComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  tasks: Task[] = [];
-  totalElements = 0;
-  pageSize = 12;
-  pageIndex = 0;
-  isLoading = false;
+  tasks = signal<Task[]>([]);
+  totalElements = signal(0);
+  pageSize = signal(12);
+  pageIndex = signal(0);
+  isLoading = signal(false);
 
   loadTasks(): void {
-    this.isLoading = true;
-    this.taskService.getTasks(this.pageIndex, this.pageSize).subscribe({
+    this.isLoading.set(true);
+    this.taskService.getTasks(this.pageIndex(), this.pageSize()).subscribe({
       next: (page) => {
-        this.tasks = page.content;
-        this.totalElements = page.totalElements;
-        this.isLoading = false;
+        this.tasks.set(page.content);
+        this.totalElements.set(page.totalElements ?? 0);
+        this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
     });
   }
 
   onPageChange(event: PageEvent): void {
-    this.pageIndex = event.pageIndex;
+    this.pageIndex.set(event.pageIndex);
     this.loadTasks();
   }
 

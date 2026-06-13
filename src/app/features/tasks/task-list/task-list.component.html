@@ -11,7 +11,7 @@
   </div>
 
   <div class="task-grid">
-    @for (task of tasks; track task.id) {
+    @for (task of tasks(); track task.id) {
       <mat-card>
         <mat-card-header>
           <mat-card-title>{{ task.title }}</mat-card-title>
@@ -19,10 +19,10 @@
 
         <mat-card-content>
           <p>{{ task.description }}</p>
-          <div class="chips">
+          <mat-chip-set class="chips">
             <mat-chip>{{ task.status }}</mat-chip>
             <mat-chip>{{ task.priority }}</mat-chip>
-          </div>
+          </mat-chip-set>
         </mat-card-content>
 
         <mat-card-actions>
@@ -34,9 +34,9 @@
   </div>
 
   <mat-paginator
-    [length]="totalElements"
-    [pageSize]="pageSize"
-    [pageIndex]="pageIndex"
+    [length]="totalElements()"
+    [pageSize]="pageSize()"
+    [pageIndex]="pageIndex()"
     (page)="onPageChange($event)"
   >
   </mat-paginator>
