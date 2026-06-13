@@ -7,7 +7,7 @@
 <div class="content">
   <div class="content-header">
     <h2>Minhas Tarefas</h2>
-    <button mat-flat-button>+ Nova Tarefa</button>
+    <button mat-flat-button (click)="openDialog()">+ Nova Tarefa</button>
   </div>
 
   <div class="task-grid">
@@ -20,13 +20,13 @@
         <mat-card-content>
           <p>{{ task.description }}</p>
           <mat-chip-set class="chips">
-            <mat-chip>{{ task.status }}</mat-chip>
-            <mat-chip>{{ task.priority }}</mat-chip>
+            <mat-chip>{{ statusLabels[task.status] }}</mat-chip>
+            <mat-chip>{{ priorityLabels[task.priority] }}</mat-chip>
           </mat-chip-set>
         </mat-card-content>
 
         <mat-card-actions>
-          <button mat-button>Editar</button>
+          <button mat-button (click)="openDialog(task)">Editar</button>
           <button mat-button color="warn" (click)="deleteTask(task.id)">Excluir</button>
         </mat-card-actions>
       </mat-card>

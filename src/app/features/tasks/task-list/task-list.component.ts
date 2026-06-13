@@ -2,13 +2,15 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { TaskService } from '../../../core/services/task.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
-import { Task } from '../../../core/models/task.model';
+import { CreateTaskRequest, Task, UpdateTaskRequest } from '../../../core/models/task.model';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { TaskDialogComponent } from '../task-dialog/task-dialog.component';
 
 @Component({
   selector: 'app-task-list',
@@ -28,12 +30,25 @@ export class TaskListComponent implements OnInit {
   private taskService = inject(TaskService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   tasks = signal<Task[]>([]);
   totalElements = signal(0);
   pageSize = signal(12);
   pageIndex = signal(0);
   isLoading = signal(false);
+
+  readonly statusLabels: Record<string, string> = {
+    TODO: 'A Fazer',
+    IN_PROGRESS: 'Em Progresso',
+    DONE: 'Concluída',
+  };
+
+  readonly priorityLabels: Record<string, string> = {
+    LOW: 'Baixa',
+    MEDIUM: 'Média',
+    HIGH: 'Alta',
+  };
 
   loadTasks(): void {
     this.isLoading.set(true);
@@ -63,6 +78,28 @@ export class TaskListComponent implements OnInit {
   logout(): void {
     this.authService.logout().subscribe({
       next: () => this.router.navigate(['/login']),
+    });
+  }
+
+  openDialog(task?: Task): void {
+    const dialogRef = this.dialog.open(TaskDialogComponent, {
+      data: task ?? null,
+      width: '90vw',
+      maxWidth: '500px',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) return;
+
+      if (task) {
+        this.taskService.updateTask(task.id, result as UpdateTaskRequest).subscribe({
+          next: () => this.loadTasks(),
+        });
+      } else {
+        this.taskService.createTask(result as CreateTaskRequest).subscribe({
+          next: () => this.loadTasks(),
+        });
+      }
     });
   }
 
