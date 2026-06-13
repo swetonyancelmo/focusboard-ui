@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>{{ isEditing() ? 'Editar Tarefa' : 'Nova Tarefa' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline">
+      <mat-label>Título</mat-label>
+      <input matInput formControlName="title" />
+      @if (form.get('title')?.hasError('required')) {
+        <mat-error>Título obrigatório</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Descrição</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+      @if (form.get('description')?.hasError('required')) {
+        <mat-error>Descrição obrigatória</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        @for (option of statusOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Prioridade</mat-label>
+      <mat-select formControlName="priority">
+        @for (option of priorityOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-flat-button (click)="onSubmit()">Salvar</button>
+</mat-dialog-actions>
