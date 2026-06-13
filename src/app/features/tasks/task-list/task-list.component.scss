@@ -1,0 +1,44 @@
+mat-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100%;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+mat-card-content p {
+  color: #666;
+  font-size: 14px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
