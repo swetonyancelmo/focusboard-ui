@@ -1,14 +1,28 @@
 <mat-toolbar>
-  <span>FocusBoard</span>
+  <div class="toolbar-brand">
+    <div class="toolbar-logo">F</div>
+    <span>FocusBoard</span>
+  </div>
   <span class="spacer"></span>
   <button mat-stroked-button (click)="logout()">Sair</button>
 </mat-toolbar>
 
 <div class="content">
   <div class="content-header">
-    <h2>Minhas Tarefas</h2>
+    <div>
+      <h2>Minhas Tarefas</h2>
+      <p class="task-count">{{ totalElements() || tasks().length }} tarefa(s) no total</p>
+    </div>
     <button mat-flat-button (click)="openDialog()">+ Nova Tarefa</button>
   </div>
+
+  @if (tasks().length === 0 && !isLoading()) {
+    <div class="empty-state">
+      <mat-icon>assignment</mat-icon>
+      <h3>Nenhuma tarefa por aqui</h3>
+      <p>Clique em <strong>+ Nova Tarefa</strong> para começar.</p>
+    </div>
+  }
 
   <div class="task-grid">
     @for (task of tasks(); track task.id) {
@@ -37,11 +51,13 @@
     }
   </div>
 
-  <mat-paginator
-    [length]="totalElements()"
-    [pageSize]="pageSize()"
-    [pageIndex]="pageIndex()"
-    (page)="onPageChange($event)"
-  >
-  </mat-paginator>
+  @if (tasks().length > 0) {
+    <mat-paginator
+      [length]="totalElements()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      (page)="onPageChange($event)"
+    >
+    </mat-paginator>
+  }
 </div>

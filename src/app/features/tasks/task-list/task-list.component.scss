@@ -1,7 +1,33 @@
 mat-toolbar {
   position: sticky;
   top: 0;
-  z-index: 100%;
+  z-index: 100;
+  background: linear-gradient(135deg, #3F51B5 0%, #5C6BC0 100%) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(63, 81, 181, 0.4);
+
+  button {
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+  }
+}
+
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
 }
 
 .spacer {
@@ -11,17 +37,53 @@ mat-toolbar {
 .content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 32px 16px;
 }
 
 .content-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 
   h2 {
+    margin: 0 0 4px;
+    font-size: 1.5rem;
+  }
+
+  .task-count {
     margin: 0;
+    font-size: 13px;
+    color: #888;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 16px;
+  text-align: center;
+  color: #9E9E9E;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    color: #BDBDBD;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+    color: #616161;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
   }
 }
 
@@ -32,9 +94,18 @@ mat-toolbar {
   margin-bottom: 24px;
 }
 
+mat-card {
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+  }
+}
+
 mat-card-content p {
   color: #666;
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .chips {
