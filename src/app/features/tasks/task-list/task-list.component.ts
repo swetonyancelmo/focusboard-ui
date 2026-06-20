@@ -11,6 +11,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskDialogComponent } from '../task-dialog/task-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-task-list',
@@ -70,8 +71,18 @@ export class TaskListComponent implements OnInit {
   }
 
   deleteTask(id: string): void {
-    this.taskService.deleteTask(id).subscribe({
-      next: () => this.loadTasks(),
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '90vw',
+      maxWidth: '400px',
+      data: { message: 'Tem certeza que deseja excluir esta tarefa?' },
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.taskService.deleteTask(id).subscribe({
+          next: () => this.loadTasks(),
+        });
+      }
     });
   }
 
