@@ -20,8 +20,12 @@
         <mat-card-content>
           <p>{{ task.description }}</p>
           <mat-chip-set class="chips">
-            <mat-chip>{{ statusLabels[task.status] }}</mat-chip>
-            <mat-chip>{{ priorityLabels[task.priority] }}</mat-chip>
+            <mat-chip [class]="'status-' + task.status.toLowerCase()">{{
+              statusLabels[task.status]
+            }}</mat-chip>
+            <mat-chip [class]="'priority-' + task.priority.toLowerCase()">{{
+              priorityLabels[task.priority]
+            }}</mat-chip>
           </mat-chip-set>
         </mat-card-content>
 
