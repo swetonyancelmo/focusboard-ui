@@ -1,39 +1,116 @@
 # FocusBoard — Guia do Projeto
 
-Você está me ajudando a construir o **frontend** do FocusBoard, um sistema de gerenciamento de tarefas pessoais. Sou iniciante em Angular, então prefiro soluções simples e diretas, com explicações quando necessário.
+Frontend do FocusBoard, sistema de gerenciamento de tarefas pessoais. O usuário é iniciante em Angular — prefere explicações claras e soluções diretas.
 
 ---
 
 ## Visão Geral
 
-O backend já está pronto (Spring Boot + JWT + PostgreSQL + Redis). Meu trabalho é construir o frontend Angular que consome essa API. O foco é aprender Angular fazendo um projeto real.
+O backend está pronto (Spring Boot + JWT + PostgreSQL + Redis). O frontend Angular já está **completamente implementado** e funcional.
 
 - **Repositório da API:** https://github.com/swetonyancelmo/focusboard-api
 - **URL base da API:** `http://localhost:8080`
 - **Documentação Swagger:** `http://localhost:8080/swagger-ui.html`
+- **Design Figma:** https://www.figma.com/design/hp3bY3F0ycMmZzSOti2wgy
 
 ---
 
-## Stack do Frontend
+## Stack
 
-| Ferramenta | Versão / Detalhe |
+| Ferramenta | Detalhe |
 |---|---|
-| Framework | Angular (versão instalada no projeto) |
-| UI Components | Angular Material |
-| Estilo | Sass (SCSS) |
+| Framework | Angular 22 |
+| UI Components | Angular Material 22 (tema Azure/Blue) |
+| Estilo | SCSS |
 | HTTP | Angular HttpClient |
-| Roteamento | Angular Router |
-| SSR/SSG | **Não** — desativado na criação do projeto |
+| Change Detection | **Zoneless** (`provideZonelessChangeDetection()`) — usar Signals |
+| Formulários | Reactive Forms (`FormBuilder`) |
+| Testes | Vitest |
 
 ---
 
-## Configurações já decididas
+## O que já está implementado
 
-- **Tema Angular Material:** Indigo (`#3F51B5`) — cor primária já usada no design
-- **Tipografia:** Roboto (padrão do Angular Material)
-- **Aparência dos campos:** `appearance="outline"` (mat-form-field)
-- **SSR:** Não habilitado (projeto client-side puro)
-- **CSS pré-processador:** Sass (SCSS)
+Todas as telas e funcionalidades estão prontas:
+
+- **Login** (`/login`) — formulário com validação, salva tokens no localStorage
+- **Cadastro** (`/register`) — formulário com validação, redireciona para /login
+- **Lista de Tarefas** (`/tasks`) — rota protegida, grid de cards, paginação
+- **Dialog de Tarefa** — reutilizado para criar e editar
+- **Dialog de Confirmação** — usado antes de excluir
+- **Snackbar** — feedback visual em criar/editar/excluir
+- **AuthGuard** — protege `/tasks`, redireciona para `/login` se sem token
+- **AuthInterceptor** — injeta Bearer token em toda requisição, renova token 401
+
+---
+
+## Estrutura de Arquivos
+
+```
+src/
+  styles.scss                        # Tema global + estilos dos chips
+  environments/
+    environment.ts                   # apiUrl: http://localhost:8080
+  app/
+    app.config.ts                    # providers: router, httpClient, interceptor, zoneless
+    app.routes.ts                    # 4 rotas configuradas
+    core/
+      guards/
+        auth.guard.ts                # CanActivateFn — verifica localStorage
+      interceptors/
+        auth.interceptor.ts          # HttpInterceptorFn — Bearer token + refresh 401
+      models/
+        auth.model.ts                # LoginRequest, RegisterRequest, AuthResponse, RegisterResponse
+        task.model.ts                # Task, TaskPage, TaskStatus, TaskPriority, CreateTaskRequest, UpdateTaskRequest
+      services/
+        auth.service.ts              # login, register, logout, refreshToken, getAccessToken, isLoggedIn
+        task.service.ts              # getTasks, createTask, updateTask, deleteTask
+    features/
+      auth/
+        login/                       # login.component.ts/.html/.scss
+        register/                    # register.component.ts/.html/.scss
+      tasks/
+        task-list/                   # task-list.component.ts/.html/.scss
+        task-dialog/                 # task-dialog.component.ts + task.dialog.component.html + .scss
+    shared/
+      confirm-dialog/
+        confirm-dialog.component.ts  # Inline template, sem arquivo HTML separado
+```
+
+> **Atenção:** o HTML do task-dialog se chama `task.dialog.component.html` (ponto, não hífen) — não renomear.
+
+---
+
+## Decisões de Implementação
+
+### Zoneless + Signals
+O app usa `provideZonelessChangeDetection()`. Isso significa que propriedades comuns (`isLoading = false`) **não atualizam a tela**. Todo estado mutável usa `signal()`:
+```typescript
+isLoading = signal(false);
+tasks = signal<Task[]>([]);
+```
+Valores derivados usam `computed()`. No HTML, signals são lidos com `()`: `{{ isLoading() }}`.
+
+### Interceptor de autenticação
+Função (`HttpInterceptorFn`), não classe. Registrada via `withInterceptors([authInterceptor])` no `app.config.ts`. Fluxo:
+1. Lê `accessToken` do localStorage
+2. Rotas `/auth/login` e `/auth/register` passam sem token
+3. Demais rotas recebem `Authorization: Bearer <token>`
+4. Em erro 401 → chama `refreshToken()` → repete requisição com novo token
+5. Se refresh falhar → limpa localStorage → navega para `/login`
+
+### Chips coloridos
+Os chips de status e prioridade recebem classes CSS dinâmicas no HTML:
+```html
+<mat-chip [class]="'status-' + task.status.toLowerCase()">
+```
+Os estilos ficam no **`styles.scss` global** (não no componente), usando o seletor `mat-chip.status-todo { background-color: ... }`. Isso é necessário porque o encapsulamento de estilos do Angular bloqueia o acesso aos elementos internos do `mat-chip`.
+
+### Dialog reutilizável (TaskDialog)
+Recebe `Task | null` via `MAT_DIALOG_DATA`. Se `null` → modo criação. Se `Task` → modo edição (pré-preenche o formulário). Usa `signal()` para o dado e `computed()` para o `isEditing`. Fecha com `dialogRef.close(formValue)` — quem abriu (`TaskListComponent`) chama a API.
+
+### Tema Angular Material
+Configurado em `styles.scss` com `mat.$azure-palette` como primary. O tema é M3 (Material Design 3). Para customizar chips, usar seletores `mat-chip.classe` no global styles — as variáveis CSS `--mdc-chip-*` não funcionam nesta versão.
 
 ---
 
@@ -41,87 +118,53 @@ O backend já está pronto (Spring Boot + JWT + PostgreSQL + Redis). Meu trabalh
 
 ### Autenticação
 
-Todos os endpoints de tarefa exigem o header:
-```
-Authorization: Bearer <access_token>
+#### POST /auth/login
+```json
+// Request
+{ "email": "string", "password": "string" }
+// Response 200
+{ "accessToken": "string", "refreshToken": "string" }
 ```
 
 #### POST /auth/register
 ```json
 // Request
 { "name": "string", "email": "string", "password": "string (6-20 chars)" }
-
 // Response 201
 { "id": "uuid", "name": "string", "email": "string" }
-```
-
-#### POST /auth/login
-```json
-// Request
-{ "email": "string", "password": "string" }
-
-// Response 200
-{ "accessToken": "string", "refreshToken": "string" }
 ```
 
 #### POST /auth/refresh
 ```json
 // Request
 { "refreshToken": "string" }
-
 // Response 200
 { "accessToken": "string", "refreshToken": "string" }
 ```
 
 #### POST /auth/logout
 ```
-Authorization: Bearer <access_token>
+Authorization: Bearer <token>
 Response: 204 No Content
 ```
 
----
-
-### Tarefas (todas exigem autenticação)
+### Tarefas (exigem autenticação)
 
 #### GET /tasks
 ```
-Query params:
-  page      (default: 0)
-  size      (default: 12)
-  direction (default: "asc" | "desc") — ordena por título
-
-Response 200:
-{
-  "content": [ TaskResponseDTO ],
-  "totalElements": number,
-  "totalPages": number,
-  "size": number,
-  "number": number
-}
+Query: page (default 0), size (default 12), direction ("asc"|"desc")
+Response 200: { content: Task[], totalElements, totalPages, size, number }
 ```
 
 #### POST /tasks
 ```json
-// Request
-{
-  "title": "string (obrigatório, max 255)",
-  "description": "string (obrigatório)",
-  "status": "TODO | IN_PROGRESS | DONE (opcional, default: TODO)",
-  "priority": "LOW | MEDIUM | HIGH (opcional, default: MEDIUM)"
-}
-// Response 201: TaskResponseDTO
+{ "title": "string", "description": "string", "status?": "TODO|IN_PROGRESS|DONE", "priority?": "LOW|MEDIUM|HIGH" }
 ```
 
 #### PATCH /tasks/{id}
 ```json
-// Request (todos os campos opcionais)
-{
-  "title": "string (3-255)",
-  "description": "string",
-  "status": "TODO | IN_PROGRESS | DONE",
-  "priority": "LOW | MEDIUM | HIGH"
-}
-// Response 200: TaskResponseDTO
+// todos os campos opcionais
+{ "title?": "string", "description?": "string", "status?": "...", "priority?": "..." }
 ```
 
 #### DELETE /tasks/{id}
@@ -129,119 +172,38 @@ Response 200:
 Response: 204 No Content
 ```
 
----
-
-### TaskResponseDTO (modelo de tarefa)
+### TaskResponseDTO
 ```typescript
-{
-  id: string;          // UUID
-  title: string;
-  description: string;
-  status: 'TODO' | 'IN_PROGRESS' | 'DONE';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH';
-  userId: string;      // UUID
-}
+{ id: string; title: string; description: string; status: TaskStatus; priority: TaskPriority; userId: string; }
 ```
 
-### Formato de erro padrão da API
+### Erro padrão
 ```typescript
-{
-  timestamp: string;
-  status: number;
-  error: string;
-  message: string;
-  path: string;
-  fields?: Record<string, string>; // erros de validação por campo
-}
+{ timestamp: string; status: number; error: string; message: string; path: string; fields?: Record<string, string>; }
 ```
 
 ---
 
-## Telas Planejadas
-
-O design já foi criado no Figma: https://www.figma.com/design/hp3bY3F0ycMmZzSOti2wgy
-
-### 1. Login (`/login`)
-- Campos: e-mail, senha
-- Ação: POST /auth/login → salvar tokens → redirecionar para /tasks
-- Link para a tela de cadastro
-
-### 2. Cadastro (`/register`)
-- Campos: nome, e-mail, senha
-- Ação: POST /auth/register → redirecionar para /login
-- Link para a tela de login
-
-### 3. Lista de Tarefas (`/tasks`) — rota protegida
-- Toolbar com nome do app e botão "Sair"
-- Botão "+ Nova Tarefa" abre o dialog de criação
-- Lista de cards com: título, descrição, chip de status, chip de prioridade, botões Editar e Excluir
-- Paginação com mat-paginator (12 itens por página)
-
-### 4. Dialog: Nova / Editar Tarefa
-- Campos: título (input), descrição (textarea), status (select), prioridade (select)
-- Reutilizar o mesmo dialog para criar e editar
-
----
-
-## Estrutura de Pastas Sugerida
+## Enums e Labels
 
 ```
-src/
-  app/
-    core/
-      guards/
-        auth.guard.ts          # redireciona para /login se não autenticado
-      interceptors/
-        auth.interceptor.ts    # adiciona o Bearer token em toda requisição
-      services/
-        auth.service.ts        # login, logout, register, refresh token
-        task.service.ts        # CRUD de tarefas
-      models/
-        task.model.ts          # interfaces TypeScript
-        auth.model.ts
-    features/
-      auth/
-        login/
-        register/
-      tasks/
-        task-list/
-        task-dialog/
-    shared/                    # componentes reutilizáveis, se necessário
+Status:
+  TODO        → "A Fazer"      → chip azul claro   (classe: status-todo)
+  IN_PROGRESS → "Em Progresso" → chip âmbar         (classe: status-in_progress)
+  DONE        → "Concluída"    → chip verde          (classe: status-done)
+
+Prioridade:
+  LOW    → "Baixa" → chip roxo claro   (classe: priority-low)
+  MEDIUM → "Média" → chip laranja claro (classe: priority-medium)
+  HIGH   → "Alta"  → chip vermelho claro (classe: priority-high)
 ```
 
 ---
 
-## Regras de Negócio Importantes
+## Regras de Negócio
 
-- O **access token expira em 15 minutos** — implementar renovação automática via refresh token no interceptor
-- O refresh token expira em **7 dias**
-- Cada usuário só acessa **suas próprias tarefas** (garantido pelo backend)
-- Ao fazer logout, chamar POST /auth/logout e limpar os tokens do armazenamento local
-- Rotas protegidas devem usar um `AuthGuard` que verifica se o token existe
-
----
-
-## Enums e Labels (para exibição nos chips e selects)
-
-```typescript
-// Status
-TODO        → "A Fazer"       (chip azul claro)
-IN_PROGRESS → "Em Progresso"  (chip âmbar)
-DONE        → "Concluída"     (chip verde)
-
-// Prioridade
-LOW    → "Baixa"  (chip roxo claro)
-MEDIUM → "Média"  (chip laranja claro)
-HIGH   → "Alta"   (chip vermelho claro)
-```
-
----
-
-## Cores do Tema (Angular Material Indigo)
-
-```scss
-Primary:    #3F51B5  (Indigo 500)
-Background: #FAFAFA
-Surface:    #FFFFFF
-Error:      #F44336
-```
+- Access token expira em **15 minutos** — renovado automaticamente pelo interceptor
+- Refresh token expira em **7 dias**
+- Cada usuário acessa apenas suas próprias tarefas (garantido pelo backend)
+- Logout chama `POST /auth/logout` e limpa os dois tokens do localStorage
+- Senha: 6 a 20 caracteres (validação no frontend e backend)

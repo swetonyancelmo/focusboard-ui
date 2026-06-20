@@ -1,59 +1,119 @@
-# FocusboardUi
+# FocusBoard UI
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.0.
+Frontend do FocusBoard, um sistema de gerenciamento de tarefas pessoais. Construído com Angular 22 e Angular Material.
 
-## Development server
+> O backend está em [focusboard-api](https://github.com/swetonyancelmo/focusboard-api) (Spring Boot + JWT + PostgreSQL + Redis) e precisa estar rodando para o app funcionar.
 
-To start a local development server, run:
+---
+
+## Tecnologias
+
+| Ferramenta | Versão |
+|---|---|
+| Angular | 22.0.0 |
+| Angular Material | 22.0.0 |
+| TypeScript | 6.0.2 |
+| RxJS | 7.8.0 |
+| Vitest | (testes unitários) |
+
+---
+
+## Funcionalidades
+
+- Autenticação com JWT (login, cadastro, logout)
+- Renovação automática do access token via refresh token
+- Rotas protegidas com AuthGuard
+- Listagem de tarefas com paginação (12 por página)
+- Criação, edição e exclusão de tarefas
+- Chips coloridos por status e prioridade
+- Dialog de confirmação antes de excluir
+- Feedback visual com Snackbar
+- Layout responsivo
+
+---
+
+## Como rodar
+
+### Pré-requisitos
+
+- Node.js instalado
+- Backend `focusboard-api` rodando em `http://localhost:8080`
+
+### Instalação
+
+```bash
+npm install
+```
+
+### Desenvolvimento
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Acesse `http://localhost:4200`. O app redireciona automaticamente para `/login`.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+### Build de produção
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Os artefatos ficam em `dist/`.
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Testes
 
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
+## Estrutura de Pastas
 
-```bash
-ng e2e
+```
+src/app/
+  core/
+    guards/
+      auth.guard.ts          # Bloqueia rotas sem token
+    interceptors/
+      auth.interceptor.ts    # Injeta Bearer token em toda requisição
+    models/
+      auth.model.ts          # Interfaces de autenticação
+      task.model.ts          # Interfaces de tarefas
+    services/
+      auth.service.ts        # Login, logout, register, refresh token
+      task.service.ts        # CRUD de tarefas
+  features/
+    auth/
+      login/                 # Tela de login (/login)
+      register/              # Tela de cadastro (/register)
+    tasks/
+      task-list/             # Lista de tarefas (/tasks)
+      task-dialog/           # Dialog de criar/editar tarefa
+  shared/
+    confirm-dialog/          # Dialog de confirmação de exclusão
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## Rotas
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Rota | Componente | Protegida |
+|---|---|---|
+| `/login` | LoginComponent | Não |
+| `/register` | RegisterComponent | Não |
+| `/tasks` | TaskListComponent | Sim (authGuard) |
+| `/` | — | Redireciona para `/login` |
+
+---
+
+## Configuração da API
+
+A URL base da API está em `src/environments/environment.ts`:
+
+```typescript
+export const environment = {
+  apiUrl: 'http://localhost:8080'
+};
+```
