@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskDialogComponent } from '../task-dialog/task-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-task-list',
@@ -32,6 +33,7 @@ export class TaskListComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   tasks = signal<Task[]>([]);
   totalElements = signal(0);
@@ -80,7 +82,10 @@ export class TaskListComponent implements OnInit {
     dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.taskService.deleteTask(id).subscribe({
-          next: () => this.loadTasks(),
+          next: () => {
+            this.loadTasks();
+            this.showMessage('Tarefa excluída.');
+          },
         });
       }
     });
@@ -104,14 +109,24 @@ export class TaskListComponent implements OnInit {
 
       if (task) {
         this.taskService.updateTask(task.id, result as UpdateTaskRequest).subscribe({
-          next: () => this.loadTasks(),
+          next: () => {
+            this.loadTasks();
+            this.showMessage('Tarefa atualizada com sucesso!');
+          },
         });
       } else {
         this.taskService.createTask(result as CreateTaskRequest).subscribe({
-          next: () => this.loadTasks(),
+          next: () => {
+            this.loadTasks();
+            this.showMessage('Tarefa criada com sucesso!');
+          },
         });
       }
     });
+  }
+
+  private showMessage(message: string): void {
+    this.snackBar.open(message, 'Fechar', { duration: 3000 });
   }
 
   ngOnInit(): void {
